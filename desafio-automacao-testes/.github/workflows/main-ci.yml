@@ -1,0 +1,88 @@
+name: Main CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  load-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg
+          curl -s https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/k6.gpg
+          echo 'deb [signed-by=/etc/apt/keyrings/k6.gpg] https://dl.k6.io/deb stable main' | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Executar teste de carga
+        run: k6 run ./01-testes-de-carga/scripts/load-test.js
+
+  api-tests:
+    runs-on: ubuntu-latest
+    needs: load-tests
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências da API
+        run: |
+          if [ -f ./02-testes-de-api/package.json ]; then
+            cd ./02-testes-de-api
+            npm install
+          else
+            echo "Arquivo package.json não encontrado ainda. Ajuste a tarefa 2 quando estiver implementada."
+          fi
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: api-tests
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências do Playwright
+        run: |
+          if [ -f ./03-testes-e2e/package.json ]; then
+            cd ./03-testes-e2e
+            npm install
+            npx playwright install --with-deps
+          else
+            echo "Estrutura do Playwright ainda não foi criada."
+          fi
+
+  mobile-tests:
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Verificar estrutura mobile
+        run: |
+          if [ -f ./04-testes-mobile/requirements.txt ]; then
+            echo "Ambiente mobile pronto para implementação."
+          else
+            echo "Arquivo requirements.txt ainda não foi adicionado."
+          fi
