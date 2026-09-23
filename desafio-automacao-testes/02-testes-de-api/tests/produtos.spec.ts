@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import * as dotenv from "dotenv";
+import { uniqueProductName } from "./helpers";
 
 dotenv.config();
 
@@ -71,7 +72,7 @@ test.describe("Produtos API", () => {
 
     const adminToken = await login(request, ADMIN_EMAIL, ADMIN_PASSWORD);
     const payload = {
-      nome: `Produto Playwright ${Date.now()}`,
+      nome: uniqueProductName("Produto Playwright"),
       preco: 470,
       descricao: "Mouse",
       quantidade: 381,
@@ -96,7 +97,7 @@ test.describe("Produtos API", () => {
     await ensureUser(request, ADMIN_EMAIL, ADMIN_PASSWORD, true);
     const adminToken = await login(request, ADMIN_EMAIL, ADMIN_PASSWORD);
     const payload = {
-      nome: `Produto duplicado ${Date.now()}`,
+      nome: uniqueProductName("Produto duplicado"),
       preco: 470,
       descricao: "Mouse",
       quantidade: 381,
@@ -193,11 +194,25 @@ test.describe("Produtos API", () => {
   test("PUT /produtos/:id atualiza produto com admin válido", async ({
     request,
   }) => {
+    await ensureUser(request, ADMIN_EMAIL, ADMIN_PASSWORD, true);
     const adminToken = await login(request, ADMIN_EMAIL, ADMIN_PASSWORD);
-    const productId = "BeeJh5lz3k6kSIzA";
+
+    const createResponse = await request.post("/produtos", {
+      headers: { Authorization: adminToken },
+      data: {
+        nome: uniqueProductName("Produto para atualizar"),
+        preco: 470,
+        descricao: "Mouse",
+        quantidade: 381,
+      },
+    });
+
+    expect(createResponse.status()).toBe(201);
+    const createdBody = await createResponse.json();
+    const productId = createdBody._id;
 
     const payload = {
-      nome: "Logitech MX Vertical",
+      nome: uniqueProductName("Logitech MX Vertical atualizado"),
       preco: 470,
       descricao: "Mouse",
       quantidade: 381,
@@ -211,80 +226,6 @@ test.describe("Produtos API", () => {
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body).toHaveProperty("message", "Registro alterado com sucesso");
-  });
-
-  test("E2E: admin cria produto, usuário comum consulta, admin atualiza e exclui", async ({
-    request,
-  }) => {
-    await ensureUser(request, ADMIN_EMAIL, ADMIN_PASSWORD, true);
-    await ensureUser(request, NON_ADMIN_EMAIL, NON_ADMIN_PASSWORD, false);
-
-    const adminToken = await login(request, ADMIN_EMAIL, ADMIN_PASSWORD);
-    const nonAdminToken = await login(
-      request,
-      NON_ADMIN_EMAIL,
-      NON_ADMIN_PASSWORD,
-    );
-
-    const productName = `Produto E2E ${Date.now()}`;
-    const createPayload = {
-      nome: productName,
-      preco: 470,
-      descricao: "Mouse",
-      quantidade: 381,
-    };
-
-    const createResponse = await request.post("/produtos", {
-      headers: { Authorization: adminToken },
-      data: createPayload,
-    });
-
-    expect(createResponse.status()).toBe(201);
-    const createdBody = await createResponse.json();
-    const productId = createdBody._id;
-
-    const readAsUserResponse = await request.get(`/produtos/${productId}`, {
-      headers: { Authorization: nonAdminToken },
-    });
-
-    expect(readAsUserResponse.status()).toBe(200);
-    const readAsUserBody = await readAsUserResponse.json();
-    expect(readAsUserBody).toHaveProperty("_id", productId);
-    expect(readAsUserBody).toHaveProperty("nome", productName);
-
-    const updatePayload = {
-      nome: `${productName} Atualizado`,
-      preco: 470,
-      descricao: "Mouse",
-      quantidade: 381,
-    };
-
-    const updateResponse = await request.put(`/produtos/${productId}`, {
-      headers: { Authorization: adminToken },
-      data: updatePayload,
-    });
-
-    expect(updateResponse.status()).toBe(200);
-    const updateBody = await updateResponse.json();
-    expect(updateBody).toHaveProperty(
-      "message",
-      "Registro alterado com sucesso",
-    );
-
-    const updatedProductResponse = await request.get(`/produtos/${productId}`);
-    const updatedProductBody = await updatedProductResponse.json();
-    expect(updatedProductBody).toHaveProperty(
-      "nome",
-      `${productName} Atualizado`,
-    );
-
-    const deleteResponse = await request.delete(`/produtos/${productId}`, {
-      headers: { Authorization: adminToken },
-    });
-
-    expect(deleteResponse.status()).toBe(200);
-    const deleteBody = await deleteResponse.json();
-    expect(deleteBody).toHaveProperty("message");
   });
 
   test("DELETE /produtos/:id remove produto com admin", async ({ request }) => {

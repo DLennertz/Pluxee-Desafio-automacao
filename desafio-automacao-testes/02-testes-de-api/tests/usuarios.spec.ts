@@ -1,16 +1,19 @@
 import { test, expect } from "@playwright/test";
 import { uniqueEmail } from "./helpers";
 
+const buildUserPayload = (overrides = {}) => ({
+  nome: "Usuário Playwright",
+  email: uniqueEmail(),
+  password: "123456",
+  administrador: "true",
+  ...overrides,
+});
+
 test.describe("Usuarios API", () => {
   test("POST /usuarios cadastra usuário válido com sucesso", async ({
     request,
   }) => {
-    const payload = {
-      nome: "Usuário Playwright",
-      email: uniqueEmail(),
-      password: "123456",
-      administrador: "true",
-    };
+    const payload = buildUserPayload();
 
     const response = await request.post("/usuarios", { data: payload });
 
@@ -45,12 +48,9 @@ test.describe("Usuarios API", () => {
   test("PUT /usuarios/:id atualiza usuário com sucesso", async ({
     request,
   }) => {
-    const createdUser = {
+    const createdUser = buildUserPayload({
       nome: "Usuário Original",
-      email: uniqueEmail(),
-      password: "123456",
-      administrador: "true",
-    };
+    });
 
     const createResponse = await request.post("/usuarios", {
       data: createdUser,
@@ -58,12 +58,11 @@ test.describe("Usuarios API", () => {
     const createBody = await createResponse.json();
     const userId = createBody._id;
 
-    const updatedUser = {
+    const updatedUser = buildUserPayload({
       nome: "Usuário Atualizado",
-      email: uniqueEmail(),
       password: "654321",
       administrador: "false",
-    };
+    });
 
     const response = await request.put(`/usuarios/${userId}`, {
       data: updatedUser,
@@ -79,12 +78,9 @@ test.describe("Usuarios API", () => {
   test("DELETE /usuarios/:id remove usuário com sucesso", async ({
     request,
   }) => {
-    const newUser = {
+    const newUser = buildUserPayload({
       nome: "Usuário para Remoção",
-      email: uniqueEmail(),
-      password: "123456",
-      administrador: "true",
-    };
+    });
 
     const createResponse = await request.post("/usuarios", { data: newUser });
     const createBody = await createResponse.json();

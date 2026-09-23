@@ -8,3 +8,6 @@ venv/
 __pycache__/
 .pytest_cache/
 reports/*.html
+.env
+.env.*
+!.env.example

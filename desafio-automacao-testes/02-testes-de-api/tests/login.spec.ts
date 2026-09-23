@@ -1,34 +1,35 @@
 import { test, expect } from "@playwright/test";
+import { uniqueEmail } from "./helpers";
 
-const validLoginPayload = {
-  email: "fulano1@qa.com",
+const buildUser = (overrides = {}) => ({
+  nome: "Fulano da Silva",
+  email: uniqueEmail(),
   password: "teste",
-};
+  administrador: "true",
+  ...overrides,
+});
 
-async function ensureUserExists(request: any) {
-  const response = await request.post("/usuarios", {
-    data: {
-      nome: "Fulano da Silva",
-      email: validLoginPayload.email,
-      password: validLoginPayload.password,
-      administrador: "true",
-    },
-  });
+async function ensureUserExists(request: any, user = buildUser()) {
+  const response = await request.post("/usuarios", { data: user });
 
   if (response.status() !== 201 && response.status() !== 400) {
     throw new Error(
       `Falha ao preparar o usuário para login: ${response.status()}`,
     );
   }
+
+  return user;
 }
 
 test.describe("Login API", () => {
   test("Scenario: Realizar login com credenciais válidas", async ({
     request,
   }) => {
-    await ensureUserExists(request);
+    const user = await ensureUserExists(request, buildUser());
 
-    const response = await request.post("/login", { data: validLoginPayload });
+    const response = await request.post("/login", {
+      data: { email: user.email, password: user.password },
+    });
 
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toContain("application/json");
@@ -49,12 +50,12 @@ test.describe("Login API", () => {
   test("Scenario: Realizar login utilizando email com letras maiúsculas", async ({
     request,
   }) => {
-    await ensureUserExists(request);
+    const user = await ensureUserExists(request, buildUser());
 
     const response = await request.post("/login", {
       data: {
-        email: "FULANO1@QA.COM",
-        password: "teste",
+        email: user.email.toUpperCase(),
+        password: user.password,
       },
     });
 
@@ -69,12 +70,12 @@ test.describe("Login API", () => {
   test("Scenario: Realizar login com espaços laterais no email", async ({
     request,
   }) => {
-    await ensureUserExists(request);
+    const user = await ensureUserExists(request, buildUser());
 
     const response = await request.post("/login", {
       data: {
-        email: " fulano1@qa.com ",
-        password: "teste",
+        email: ` ${user.email} `,
+        password: user.password,
       },
     });
 
@@ -89,7 +90,7 @@ test.describe("Login API", () => {
   }) => {
     const response = await request.post("/login", {
       data: {
-        email: "naoexiste@qa.com",
+        email: uniqueEmail(),
         password: "teste",
       },
     });
@@ -102,9 +103,11 @@ test.describe("Login API", () => {
   test("Scenario: Tentar realizar login com senha incorreta", async ({
     request,
   }) => {
+    const user = await ensureUserExists(request, buildUser());
+
     const response = await request.post("/login", {
       data: {
-        email: "fulano1@qa.com",
+        email: user.email,
         password: "senhaIncorreta",
       },
     });
@@ -134,9 +137,11 @@ test.describe("Login API", () => {
   test("Scenario: Tentar realizar login sem informar a senha", async ({
     request,
   }) => {
+    const user = await ensureUserExists(request, buildUser());
+
     const response = await request.post("/login", {
       data: {
-        email: "fulano1@qa.com",
+        email: user.email,
         password: "",
       },
     });
@@ -168,9 +173,11 @@ test.describe("Login API", () => {
   test("Scenario: Tentar realizar login com senha nula", async ({
     request,
   }) => {
+    const user = await ensureUserExists(request, buildUser());
+
     const response = await request.post("/login", {
       data: {
-        email: "fulano1@qa.com",
+        email: user.email,
         password: null,
       },
     });
