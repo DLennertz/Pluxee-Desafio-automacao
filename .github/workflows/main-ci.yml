@@ -98,6 +98,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p relatorio-final
+
+          find relatorios -mindepth 1 -maxdepth 1 -type d -exec cp -R {} relatorio-final/ \;
+
           cat > relatorio-final/index.html <<'EOF'
           <!doctype html>
           <html lang="pt-BR">
@@ -115,11 +118,11 @@ jobs:
               <ul>
           EOF
 
-          while IFS= read -r html; do
-            rel_path="${html#relatorios/}"
-            name="${rel_path%%/*}"
-            echo "                <li><a href=\"../${rel_path}\">${name}</a></li>" >> relatorio-final/index.html
-          done < <(find relatorios -type f -name index.html | sort)
+          while IFS= read -r report_dir; do
+            report_name="$(basename "$report_dir")"
+            report_url="./${report_name}/playwright-report/index.html"
+            echo "                <li><a href=\"${report_url}\">${report_name}</a></li>" >> relatorio-final/index.html
+          done < <(find relatorio-final -mindepth 1 -maxdepth 1 -type d | sort)
 
           cat >> relatorio-final/index.html <<'EOF'
               </ul>
