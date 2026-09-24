@@ -1,13 +1,5 @@
-# Tarefa 4 - Testes Mobile
+## Aviso ao avaliador
 
-Este módulo será usado para automação de testes mobile com Appium + Python.
+Não realizei os testes desta tarefa porque não tenho conhecimento suficiente em automação para aplicativos móveis com Appium e ambiente Android. A estrutura foi estudada apenas de forma teórica, mas não foi validada em execução prática devido à minha limitação técnica no momento.
 
-## Estrutura esperada
-
-- apps/
-- tests/
-- requirements.txt
-
-## Objetivo
-
-Validar cenários críticos em dispositivos móveis e emulators usando automação mobile.
+Este ponto da tarefa ficou incompleto por falta de conhecimento e ausência de ambiente configurado para execução real de testes mobile.
