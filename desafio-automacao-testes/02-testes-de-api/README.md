@@ -110,19 +110,85 @@ npx playwright show-report
 - PUT /produtos/:id com admin válido
 - DELETE /produtos/:id com admin válido
 - DELETE /produtos/:id quando o produto está em carrinho
-- cenário end-to-end:
-  - admin cria produto
-  - usuário comum consulta
-  - admin atualiza
-  - admin exclui
 
 ### Usuários
 
-- GET /usuarios
 - POST /usuarios
 - PUT /usuarios/:id
 - DELETE /usuarios/:id
 - validação de mensagens e payloads de erro
+
+## Cobertura de rotas
+
+A cobertura foi analisada considerando rotas específicas testadas na API.
+
+| Rota / Endpoint | Cobertura                                                                                      | Status            |
+| :-------------- | :--------------------------------------------------------------------------------------------- | :---------------- |
+| `/login`        | POST /login                                                                                    | 🟢 Coberto        |
+| `/usuarios`     | GET /usuarios                                                                                  | ⚪ Não coberto    |
+| `/usuarios`     | POST /usuarios                                                                                 | 🟢 Coberto        |
+| `/usuarios/:id` | GET /usuarios/:id                                                                              | ⚪ Não coberto    |
+| `/usuarios/:id` | PUT /usuarios/:id                                                                              | 🟢 Coberto        |
+| `/usuarios/:id` | DELETE /usuarios/:id                                                                           | 🟢 Coberto        |
+| `/produtos`     | GET /produtos                                                                                  | 🟢 Coberto        |
+| `/produtos`     | GET /produtos?nome=...                                                                         | 🟢 Coberto        |
+| `/produtos`     | POST /produtos                                                                                 | 🟢 Coberto        |
+| `/produtos/:id` | GET /produtos/:id                                                                              | 🟢 Coberto        |
+| `/produtos/:id` | PUT /produtos/:id                                                                              | 🟢 Coberto        |
+| `/produtos/:id` | DELETE /produtos/:id                                                                           | 🟢 Coberto        |
+| `/carrinhos`    | GET /carrinhos, GET /carrinhos/:id, POST /carrinhos, PUT /carrinhos/:id, DELETE /carrinhos/:id | ⚪ Fora do escopo |
+
+### Lista de cenários cobertos
+
+#### Login
+
+- login com credenciais válidas
+- login com email em letras maiúsculas
+- login com espaços laterais no email
+- login com email não cadastrado
+- login com senha incorreta
+- login sem informar email
+- login sem informar senha
+- login com email nulo
+- login com senha nula
+- login sem informar campos obrigatórios
+- login sem enviar body
+- login com JSON inválido
+- login com email em formato inválido
+- login com content-type incompatível
+- login com método HTTP não suportado
+- login com payload de SQL injection
+- login com payload excessivamente grande
+
+#### Produtos
+
+- GET /produtos retorna 200 e lista de produtos
+- GET /produtos aceita filtros por query params
+- POST /produtos cadastra produto com admin válido
+- POST /produtos rejeita produto duplicado
+- POST /produtos exige token de autenticação
+- POST /produtos rejeita usuário não administrador
+- GET /produtos/:id retorna produto existente
+- GET /produtos/:id retorna 400 quando o id for inválido
+- PUT /produtos/:id atualiza produto com admin válido
+- DELETE /produtos/:id remove produto com admin
+- DELETE /produtos/:id rejeita produto que faz parte de carrinho
+
+#### Usuários
+
+- POST /usuarios cadastra usuário válido com sucesso
+- POST /usuarios rejeita payload inválido
+- PUT /usuarios/:id atualiza usuário com sucesso
+- DELETE /usuarios/:id remove usuário com sucesso
+
+### Resumo da cobertura por recurso
+
+| Recurso      | Rotas cobertas | Cobertura           |
+| :----------- | :------------- | :------------------ |
+| `/login`     | 1/1            | 100%                |
+| `/usuarios`  | 3/5            | 60%                 |
+| `/produtos`  | 5/5            | 100%                |
+| `/carrinhos` | 0/5            | 0% (fora do escopo) |
 
 ## Regras de negócio validadas
 
