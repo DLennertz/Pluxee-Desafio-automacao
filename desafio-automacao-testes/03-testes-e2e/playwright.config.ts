@@ -9,7 +9,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: [
+    ["list"],
+    ["html", { open: "never", outputFolder: "playwright-report" }],
+    ["junit", { outputFile: "test-results/results.xml" }],
+  ],
   use: {
     baseURL: "https://www.saucedemo.com/v1",
     headless: true,

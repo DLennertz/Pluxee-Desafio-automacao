@@ -9,6 +9,7 @@ export default defineConfig({
   reporter: [
     ["list"],
     ["html", { open: "never", outputFolder: "playwright-report" }],
+    ["junit", { outputFile: "test-results/results.xml" }],
   ],
   use: {
     baseURL: "https://serverest.dev",
